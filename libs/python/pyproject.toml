@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phl"
+version = "0.1.0"
+description = "Read and write PHL documents and HPL tables."
+readme = "README.md"
+requires-python = ">=3.8"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "d-ustindwayne" }]
+keywords = ["phl", "hpl", "config", "configuration", "table", "data format", "parser"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: File Formats",
+    "Topic :: Software Development :: Libraries",
+]
+
+[project.urls]
+Homepage = "https://github.com/d-ustindwayne/PHL"
+Source = "https://github.com/d-ustindwayne/PHL/tree/main/libs/python"
+Issues = "https://github.com/d-ustindwayne/PHL/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]

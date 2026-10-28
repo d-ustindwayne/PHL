@@ -1,0 +1,9 @@
+product: (ID, Name, Price) {
+    101, "Wireless Mouse", 25.99;
+    102, "Ergonomic Chair", 149.50;  // comment after a row
+}
+"with spaces": ("first name", age) { "Ann", 30; }
+cells: (ID, Tags, Meta) {
+    1, ["a", "b"], {color: "red"};
+}
+none: (ID) {}

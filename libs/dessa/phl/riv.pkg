@@ -1,0 +1,7 @@
+name = phl
+version = 2.0.0
+entry = phl.dm
+description = Read and write PHL documents and HPL tables
+
+[dependencies]
+json = 1.2.0

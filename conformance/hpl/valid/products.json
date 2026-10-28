@@ -1,0 +1,6 @@
+[
+  { "ID": 101, "Name": "Wireless Mouse", "Category": "Electronics", "Price": 25.99, "StockQuantity": 150 },
+  { "ID": 102, "Name": "Ergonomic Chair", "Category": "Furniture", "Price": 149.5, "StockQuantity": 45 },
+  { "ID": 103, "Name": "Stainless Steel Water Bottle", "Category": "Kitchen", "Price": 18.75, "StockQuantity": 200 },
+  { "ID": 104, "Name": "LED Desk Lamp", "Category": "Office", "Price": 34.0, "StockQuantity": 80 }
+]

@@ -1,0 +1,40 @@
+// A tour of PHL. Keys are letters, digits and underscore; quote any other key.
+
+name: "Dustin Dwayne"           // string
+age: 21                         // number (whole)
+grade: 98.42                    // number (decimal)
+isStudent: true                 // boolean
+mark: "A"                       // there is no character type, so this is a string
+nickname: nil                   // empty
+"full name": "Dustin Dwayne"    // a quoted key
+
+// Commas between top-level entries are optional
+city: "Cebu", country: "Philippines"
+
+// Table: columns in ( ), then one row per line in { }, each ending with ';'
+// product[3].ID is 104 and product[2].Price is 18.75
+product: (ID, Name, Category, Price, StockQuantity) {
+    101, "Wireless Mouse", "Electronics", 25.99, 150;
+    102, "Ergonomic Chair", "Furniture", 149.50, 45;
+    103, "Stainless Steel Water Bottle", "Kitchen", 18.75, 200;
+    104, "LED Desk Lamp", "Office", 34.00, 80;
+}
+
+// List
+fruits: ["apple", "banana", "cherry"]
+
+// Object
+Services: {
+    Database: {
+        ServerName: "Server",
+        Port: 1341
+    },
+    API: {
+        Endpoint: "https://api.example.com",
+        Method: "GET"
+    },
+    Authentication: {
+        Username: "admin",
+        Password: "password123"
+    }
+}

@@ -1,0 +1,106 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "PHL",
+  "scopeName": "source.phl",
+  "patterns": [{ "include": "#value-context" }],
+  "repository": {
+    "value-context": {
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#table" },
+        { "include": "#object" },
+        { "include": "#list" },
+        { "include": "#entry-key" },
+        { "include": "#string" },
+        { "include": "#constant" },
+        { "include": "#number" },
+        { "name": "punctuation.separator.row.phl", "match": ";" },
+        { "name": "punctuation.separator.comma.phl", "match": "," },
+        { "name": "invalid.illegal.phl", "match": "[^\\s]" }
+      ]
+    },
+    "comment": {
+      "name": "comment.line.double-slash.phl",
+      "begin": "//",
+      "beginCaptures": { "0": { "name": "punctuation.definition.comment.phl" } },
+      "end": "$"
+    },
+    "entry-key": {
+      "patterns": [
+        {
+          "match": "([A-Za-z0-9_]+)\\s*(:)",
+          "captures": {
+            "1": { "name": "support.type.property-name.phl" },
+            "2": { "name": "punctuation.separator.key-value.phl" }
+          }
+        },
+        {
+          "match": "(\"(?:[^\"\\\\]|\\\\.)*\")\\s*(:)",
+          "captures": {
+            "1": { "name": "support.type.property-name.phl" },
+            "2": { "name": "punctuation.separator.key-value.phl" }
+          }
+        }
+      ]
+    },
+    "object": {
+      "begin": "\\{",
+      "beginCaptures": { "0": { "name": "punctuation.definition.object.begin.phl" } },
+      "end": "\\}",
+      "endCaptures": { "0": { "name": "punctuation.definition.object.end.phl" } },
+      "patterns": [{ "include": "#value-context" }]
+    },
+    "list": {
+      "begin": "\\[",
+      "beginCaptures": { "0": { "name": "punctuation.definition.list.begin.phl" } },
+      "end": "\\]",
+      "endCaptures": { "0": { "name": "punctuation.definition.list.end.phl" } },
+      "patterns": [{ "include": "#value-context" }]
+    },
+    "table": {
+      "begin": "\\(",
+      "beginCaptures": { "0": { "name": "punctuation.definition.columns.begin.phl" } },
+      "end": "(?<=\\})",
+      "patterns": [
+        {
+          "begin": "\\G",
+          "end": "\\)",
+          "endCaptures": { "0": { "name": "punctuation.definition.columns.end.phl" } },
+          "patterns": [
+            { "include": "#comment" },
+            { "name": "entity.name.tag.column.phl", "match": "[A-Za-z0-9_]+" },
+            { "name": "entity.name.tag.column.phl", "match": "\"(?:[^\"\\\\]|\\\\.)*\"" },
+            { "name": "punctuation.separator.comma.phl", "match": "," }
+          ]
+        },
+        {
+          "begin": "\\{",
+          "beginCaptures": { "0": { "name": "punctuation.definition.rows.begin.phl" } },
+          "end": "\\}",
+          "endCaptures": { "0": { "name": "punctuation.definition.rows.end.phl" } },
+          "patterns": [{ "include": "#value-context" }]
+        },
+        { "include": "#comment" }
+      ]
+    },
+    "string": {
+      "name": "string.quoted.double.phl",
+      "begin": "\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.phl" } },
+      "end": "\"|$",
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.phl" } },
+      "patterns": [
+        { "name": "constant.character.escape.phl", "match": "\\\\[nt\"\\\\]" },
+        { "name": "invalid.illegal.escape.phl", "match": "\\\\." }
+      ]
+    },
+    "constant": {
+      "name": "constant.language.phl",
+      "match": "\\b(true|false|nil)\\b"
+    },
+    "number": {
+      "name": "constant.numeric.phl",
+      "match": "-?\\b\\d+(\\.\\d+)?\\b"
+    }
+  }
+}

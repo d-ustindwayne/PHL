@@ -1,0 +1,83 @@
+{
+  "name": "phl",
+  "displayName": "PHL",
+  "description": "PHL and HPL support: highlighting, errors as you type, outline, hover with value paths, and completion.",
+  "version": "0.3.0",
+  "publisher": "d-ustindwayne",
+  "author": {
+    "name": "d-ustindwayne"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/d-ustindwayne/PHL/tree/main/vscode-phl#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/d-ustindwayne/PHL.git",
+    "directory": "vscode-phl"
+  },
+  "bugs": {
+    "url": "https://github.com/d-ustindwayne/PHL/issues"
+  },
+  "icon": "icons/phl-128x128.png",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [],
+  "scripts": {
+    "copy-lib": "node scripts/copy-lib.js",
+    "vscode:prepublish": "npm run copy-lib",
+    "test": "npm run copy-lib && node --test test/analysis.test.mjs"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "phl",
+        "aliases": [
+          "PHL",
+          "phl"
+        ],
+        "extensions": [
+          ".phl",
+          ".pll"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/phl-icon.svg",
+          "dark": "./icons/phl-icon.svg"
+        }
+      },
+      {
+        "id": "hpl",
+        "aliases": [
+          "HPL",
+          "hpl"
+        ],
+        "extensions": [
+          ".hpl",
+          ".hpll"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/phl-icon.svg",
+          "dark": "./icons/phl-icon.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "phl",
+        "scopeName": "source.phl",
+        "path": "./syntaxes/phl.tmLanguage.json"
+      },
+      {
+        "language": "hpl",
+        "scopeName": "source.hpl",
+        "path": "./syntaxes/hpl.tmLanguage.json"
+      }
+    ]
+  }
+}

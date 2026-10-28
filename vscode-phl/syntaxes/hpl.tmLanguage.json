@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "HPL",
+  "scopeName": "source.hpl",
+  "patterns": [
+    { "include": "source.phl#comment" },
+    { "include": "source.phl#table" },
+    { "name": "invalid.illegal.hpl", "match": "[^\\s]" }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "name": "@d-ustindwayne/phl",
+  "version": "0.1.0",
+  "description": "Read and write PHL documents and HPL tables.",
+  "keywords": [
+    "phl",
+    "hpl",
+    "config",
+    "configuration",
+    "table",
+    "data format",
+    "parser"
+  ],
+  "license": "Apache-2.0",
+  "author": "d-ustindwayne",
+  "homepage": "https://github.com/d-ustindwayne/PHL#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/d-ustindwayne/PHL.git",
+    "directory": "libs/js"
+  },
+  "bugs": {
+    "url": "https://github.com/d-ustindwayne/PHL/issues"
+  },
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

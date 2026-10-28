@@ -1,0 +1,103 @@
+// Runs the shared conformance cases and a few checks of the Dessa library.
+// From the repository root:
+//     DESSA_PACKAGES="libs/dessa;<Dessa>/tools/riv/packages" dessa run libs/dessa/tests/phl_test.ds
+
+$("phl") { parsePhl, parsePhlTable, toPhl, toPhlTable, PhlError }
+$("json") { Json, parseJson, jsonObject, jsonNum, jsonStr }
+$("os") { readFile, listDir, fileExists }
+
+var[Int] passed = 0;
+var[Int] failed = 0;
+
+func[Emp] check(name[Str], ok[Bul]) {
+    if (ok) {
+        passed++;
+    } else {
+        failed++;
+        print($"FAIL {name}");
+    }
+}
+
+func[Bul] same(a[Json], b[Json]) {
+    return a.toStr() == b.toStr();
+}
+
+func[Str<>] casesIn(folder[Str], ext[Str]) {
+    var[Str<>] names = listDir(folder).filter((name[Str]) := name.endsWith(ext));
+    names.sort();
+    return names;
+}
+
+func[Bul] parseFails(text[Str], table[Bul]) {
+    try {
+        if (table) {
+            parsePhlTable(text);
+        } else {
+            parsePhl(text);
+        }
+    } catch (e[PhlError]) {
+        return true;
+    }
+    return false;
+}
+
+const[Str] ROOT = "conformance";
+
+// ---- PHL ----
+var[Str] valid = $"{ROOT}/phl/valid";
+for (var[Str] name in casesIn(valid, ".phl")) {
+    var[Str] stem = name.substr(0, name.length() - 4);
+    var[Str] text = readFile($"{valid}/{name}");
+    var[Json] data = parsePhl(text);
+    check(name, same(data, parseJson(readFile($"{valid}/{stem}.json"))));
+
+    var[Str] raw = $"{valid}/{stem}.nocoerce.json";
+    if (fileExists(raw)) check($"{name} (coerce off)", same(parsePhl(text, coerce: false), parseJson(readFile(raw))));
+
+    check($"{name} (round trip)", same(parsePhl(toPhl(data)), data));
+    check($"{name} (round trip, indent 0)", same(parsePhl(toPhl(data, 0)), data));
+}
+
+var[Str] invalid = $"{ROOT}/phl/invalid";
+for (var[Str] name in casesIn(invalid, ".phl")) {
+    check(name, parseFails(readFile($"{invalid}/{name}"), false));
+}
+
+// ---- HPL ----
+var[Str] tables = $"{ROOT}/hpl/valid";
+for (var[Str] name in casesIn(tables, ".hpl")) {
+    var[Str] stem = name.substr(0, name.length() - 4);
+    var[Json] rows = parsePhlTable(readFile($"{tables}/{name}"));
+    check(name, same(rows, parseJson(readFile($"{tables}/{stem}.json"))));
+    check($"{name} (round trip)", same(parsePhlTable(toPhlTable(rows)), rows));
+}
+
+var[Str] badTables = $"{ROOT}/hpl/invalid";
+for (var[Str] name in casesIn(badTables, ".hpl")) {
+    check(name, parseFails(readFile($"{badTables}/{name}"), true));
+}
+
+// ---- Library checks ----
+var[Json] product = parsePhl("product: (ID, Name) { 101, \"a\"; 102, \"b\"; 103, \"c\"; 104, \"d\"; }");
+check("table index", product.get("product").at(3).get("ID").asInt() == 104);
+
+try {
+    parsePhl("a: 1\nb: oops");
+    check("error position", false);
+} catch (e[PhlError]) {
+    check("error position", e.line == 2 && e.column == 4);
+}
+
+var[Json] layout = parsePhl("name: \"Ann\"\ntags: [\"a\", \"b\"]\nserver: {Host: \"db\", Port: 1341}\nrows: (ID, Name) { 1, \"x\"; 2, \"y\"; }");
+check("toPhl layout", toPhl(layout) == "name: \"Ann\"\ntags: [\"a\", \"b\"]\nserver: {\n    Host: \"db\",\n    Port: 1341\n}\nrows: (ID, Name) {\n    1, \"x\";\n    2, \"y\";\n}\n");
+check("toPhlTable", toPhlTable(parsePhlTable("(ID, \"full name\") { 1, \"Ann\"; }")) == "(ID, \"full name\") {\n    1, \"Ann\";\n}\n");
+
+var[Json] numbers = jsonObject().set("small", jsonNum(0.0000001)).set("large", jsonNum(10000000000000000000000.0)).set("neg", jsonNum(-0.000000025));
+check("numbers without exponents", toPhl(numbers) == "small: 0.0000001\nlarge: 10000000000000000000000\nneg: -0.000000025\n");
+
+var[Str] empties = toPhl(parsePhl("o: {}\nl: []"));
+check("empty object and list", empties == "o: {}\nl: []\n");
+check("empty object reads back", parsePhl(empties).get("o").isObject());
+
+print($"{passed} passed, {failed} failed");
+if (failed > 0) throw "conformance failures";

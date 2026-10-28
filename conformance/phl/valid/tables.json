@@ -1,0 +1,9 @@
+{
+  "product": [
+    { "ID": 101, "Name": "Wireless Mouse", "Price": 25.99 },
+    { "ID": 102, "Name": "Ergonomic Chair", "Price": 149.5 }
+  ],
+  "with spaces": [{ "first name": "Ann", "age": 30 }],
+  "cells": [{ "ID": 1, "Tags": ["a", "b"], "Meta": { "color": "red" } }],
+  "none": []
+}

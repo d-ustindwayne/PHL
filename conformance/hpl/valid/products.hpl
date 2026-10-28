@@ -1,0 +1,6 @@
+(ID,Name,Category,Price,StockQuantity) {
+    101, "Wireless Mouse", "Electronics", 25.99, 150;
+    102, "Ergonomic Chair", "Furniture", 149.50, 45;
+    103, "Stainless Steel Water Bottle", "Kitchen", 18.75, 200;
+    104, "LED Desk Lamp", "Office", 34.00, 80;
+}

@@ -1,0 +1,7 @@
+{
+  "fruits": ["apple", "banana", "cherry"],
+  "mixed": [1, 2.5, true, null, "x"],
+  "nested": [[1, 2], { "Port": 80 }, {}],
+  "multiline": ["a", "b"],
+  "empty": []
+}

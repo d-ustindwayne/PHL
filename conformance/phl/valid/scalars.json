@@ -1,0 +1,10 @@
+{
+  "name": "Wireless Mouse",
+  "count": 42,
+  "negative": -3,
+  "price": 149.5,
+  "active": true,
+  "deleted": false,
+  "note": null,
+  "escaped": "line\nnext\ttab \"quoted\" back\\slash"
+}
