@@ -8,7 +8,7 @@ language.
 ```phl
 // Store settings
 name: "Corner Shop"
-open: true
+open: "true"
 taxRate: 0.12
 
 product: (ID, Name, Price, Stock) {
@@ -42,11 +42,13 @@ commas.
 |---|---|---|
 | String | `"Wireless Mouse"` | Double quotes. Escapes: `\n` `\t` `\"` `\\`. One line only. |
 | Number | `42`, `-3`, `149.50` | Whole or decimal. |
-| Boolean | `true`, `false` | |
-| Empty | `nil` | Becomes `null` in JSON. |
 | Object | `{host: "db", port: 5432}` | `key: value` entries inside `{ }`. |
 | List | `["apple", "banana"]` | Values inside `[ ]`, without keys. |
 | Table | `(ID, Name) { 1, "a"; 2, "b"; }` | Columns inside `( )`, rows inside `{ }`. |
+
+There are no boolean or null values. Write them as strings, `"true"`,
+`"false"` and `"nil"`, and the libraries read them as booleans and null (see
+[Type conversion](#type-conversion)). A bare `true` without quotes is an error.
 
 Rules:
 
@@ -114,12 +116,15 @@ Other strings stay strings, including numbers in quotes such as `"007"`. To
 turn the conversion off, pass `coerce=False` in Python, `{ coerce: false }` in
 JavaScript or `coerce: false` in Dessa.
 
+When writing, the libraries write booleans and null as `"true"`, `"false"` and
+`"nil"`.
+
 ## Libraries
 
 | Language | Package | Source |
 |---|---|---|
 | Python 3.8+ | `phl` | [libs/python](libs/python) |
-| JavaScript and TypeScript (Node 18+) | `@d-ustindwayne/phl` | [libs/js](libs/js) |
+| JavaScript and TypeScript (Node 18+, Bun) | `phl-file` | [libs/js](libs/js) |
 | Dessa | `phl` (riv package) | [libs/dessa](libs/dessa) |
 
 None of them has dependencies. The Dessa package uses Dessa's own `json`
@@ -140,7 +145,7 @@ print(phl.dumps(shop))
 JavaScript:
 
 ```js
-import { parse, stringify } from "@d-ustindwayne/phl";
+import { parse, stringify } from "phl-file";
 
 const shop = parse(text);
 console.log(shop.product[2].Name); // LED Desk Lamp
@@ -165,8 +170,10 @@ is written as a table. Each library's README lists its full API.
 
 [vscode-phl](vscode-phl) is the VS Code extension. It highlights `.phl` and
 `.hpl` files, shows errors as you type, fills the outline, shows the path and
-type of a value on hover (`product[2].Name`), and completes `true`, `false`,
-`nil` and table, object and list snippets.
+type of a value on hover (`product[2].Name`), and completes `"true"`, `"false"`,
+`"nil"` and table, object and list snippets. Download the `.vsix` from the
+[releases page](https://github.com/d-ustindwayne/PHL/releases) and install it
+with **Install from VSIX...** in the Extensions view.
 
 ## Repository layout
 
@@ -188,8 +195,8 @@ language should pass all of them.
 
 ```
 cd libs/python && PYTHONPATH=src python -m unittest discover -s tests
-cd libs/js && npm test
-cd vscode-phl && npm test
+cd libs/js && bun test
+cd vscode-phl && bun run test
 ```
 
 For Dessa, run from the repository root with Dessa's bundled packages listed

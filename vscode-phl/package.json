@@ -28,9 +28,9 @@
   "main": "./extension.js",
   "activationEvents": [],
   "scripts": {
-    "copy-lib": "node scripts/copy-lib.js",
-    "vscode:prepublish": "npm run copy-lib",
-    "test": "npm run copy-lib && node --test test/analysis.test.mjs"
+    "copy-lib": "bun scripts/copy-lib.js",
+    "vscode:prepublish": "bun run copy-lib",
+    "test": "bun run copy-lib && bun test test/analysis.test.mjs"
   },
   "contributes": {
     "languages": [

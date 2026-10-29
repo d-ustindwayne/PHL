@@ -54,10 +54,12 @@ class _Writer:
         self.indent = " " * indent if indent else ""
 
     def value(self, value, depth, inline=False):
+        # PHL has no boolean or null values, so they are written as the strings
+        # that coercion reads back.
         if value is None:
-            return "nil"
+            return '"nil"'
         if isinstance(value, bool):
-            return "true" if value else "false"
+            return '"true"' if value else '"false"'
         if isinstance(value, (int, float)):
             return _number(value)
         if isinstance(value, str):

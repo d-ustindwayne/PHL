@@ -3,7 +3,7 @@ name: "Wireless Mouse"
 count: 42
 negative: -3
 price: 149.50
-active: true
-deleted: false
-note: nil
+active: "true"
+deleted: "false"
+note: "nil"
 escaped: "line\nnext\ttab \"quoted\" back\\slash"

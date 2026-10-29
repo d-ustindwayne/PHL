@@ -64,12 +64,24 @@ test("coerced values are real booleans and null", () => {
   assert.equal(data.b, null);
 });
 
+test("bare true, false and nil are errors", () => {
+  for (const word of ["true", "false", "nil"]) {
+    assert.throws(() => parse(`a: ${word}`), PHLError);
+  }
+});
+
+test("booleans and null are written as strings", () => {
+  const text = stringify({ a: true, b: false, c: null });
+  assert.equal(text, 'a: "true"\nb: "false"\nc: "nil"\n');
+  assert.deepEqual(parse(text), { a: true, b: false, c: null });
+});
+
 test("keys are never coerced", () => {
   assert.deepEqual(parse('"true": 1'), { true: 1 });
 });
 
 test("__proto__ is stored as a normal key", () => {
-  const data = parse('"__proto__": {polluted: true}');
+  const data = parse('"__proto__": {polluted: 1}');
   assert.deepEqual(Object.keys(data), ["__proto__"]);
   assert.equal({}.polluted, undefined);
 });

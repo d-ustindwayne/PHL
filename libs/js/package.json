@@ -1,6 +1,6 @@
 {
-  "name": "@d-ustindwayne/phl",
-  "version": "0.1.0",
+  "name": "phl-file",
+  "version": "0.2.0",
   "description": "Read and write PHL documents and HPL tables.",
   "keywords": [
     "phl",
@@ -41,6 +41,6 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "bun test"
   }
 }

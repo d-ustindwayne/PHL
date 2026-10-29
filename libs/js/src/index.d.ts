@@ -42,12 +42,12 @@ export interface Entry {
   value: Node;
 }
 
-/** `coerced` is true for a quoted "true", "nil" and so on read as another type. */
+/** Booleans and nil come only from coercion of a quoted "true", "nil" and so on. */
 export type Node =
   | { type: "string"; value: string; coerced: false; start: Position; end: Position }
   | { type: "number"; value: number; coerced: false; start: Position; end: Position }
-  | { type: "boolean"; value: boolean; coerced: boolean; start: Position; end: Position }
-  | { type: "nil"; value: null; coerced: boolean; start: Position; end: Position }
+  | { type: "boolean"; value: boolean; coerced: true; start: Position; end: Position }
+  | { type: "nil"; value: null; coerced: true; start: Position; end: Position }
   | { type: "object"; entries: Entry[]; start: Position; end: Position }
   | { type: "list"; items: Node[]; start: Position; end: Position }
   | {

@@ -2,4 +2,4 @@ a: 1, b: 2,
 c: 3
 
 "full name": "Ann"
-2fa_enabled: true,
+2fa_enabled: "true",

@@ -1,5 +1,5 @@
 // Users exported from the admin panel
 (id, "display name", active) {
     1, "Ann", "true";  // coerced to a boolean
-    2, "Ben", false;
+    2, "Ben", "false";
 }

@@ -165,9 +165,9 @@ export function hover(tree, line, column) {
 // ---- Completion ----
 
 export const VALUE_COMPLETIONS = [
-    { label: 'true', kind: 'Constant', insert: 'true', detail: 'boolean' },
-    { label: 'false', kind: 'Constant', insert: 'false', detail: 'boolean' },
-    { label: 'nil', kind: 'Constant', insert: 'nil', detail: 'empty value' },
+    { label: 'true', kind: 'Constant', insert: '"true"', detail: 'string, read as a boolean' },
+    { label: 'false', kind: 'Constant', insert: '"false"', detail: 'string, read as a boolean' },
+    { label: 'nil', kind: 'Constant', insert: '"nil"', detail: 'string, read as null' },
     { label: 'table', kind: 'Snippet', insert: '(${1:ID}, ${2:Name}) {\n\t${3:1}, ${4:"a"};\n}', detail: '(columns) { rows; }' },
     { label: 'object', kind: 'Snippet', insert: '{\n\t${1:key}: ${2:value}\n}', detail: '{ key: value }' },
     { label: 'list', kind: 'Snippet', insert: '[${1}]', detail: '[ value, value ]' },

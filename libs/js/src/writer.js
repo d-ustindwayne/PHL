@@ -67,10 +67,12 @@ class Writer {
   }
 
   value(value, depth, inline = false) {
-    if (value === null) return "nil";
+    // PHL has no boolean or null values, so they are written as the strings
+    // that coercion reads back.
+    if (value === null) return '"nil"';
     switch (typeof value) {
       case "boolean":
-        return value ? "true" : "false";
+        return value ? '"true"' : '"false"';
       case "number":
         return writeNumber(value);
       case "string":

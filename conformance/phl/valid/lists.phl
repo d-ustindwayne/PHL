@@ -1,5 +1,5 @@
 fruits: ["apple", "banana", "cherry"]
-mixed: [1, 2.5, true, nil, "x",]
+mixed: [1, 2.5, "true", "nil", "x",]
 nested: [[1, 2], {Port: 80}, {}]
 multiline: [
     "a",

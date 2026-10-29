@@ -68,6 +68,16 @@ class TypeTests(unittest.TestCase):
         self.assertIs(data["a"], True)
         self.assertIsNone(data["b"])
 
+    def test_bare_words_are_errors(self):
+        for word in ("true", "false", "nil"):
+            with self.assertRaises(phl.PHLError):
+                phl.loads(f"a: {word}")
+
+    def test_booleans_and_none_are_written_as_strings(self):
+        text = phl.dumps({"a": True, "b": False, "c": None})
+        self.assertEqual(text, 'a: "true"\nb: "false"\nc: "nil"\n')
+        self.assertEqual(phl.loads(text), {"a": True, "b": False, "c": None})
+
     def test_keys_are_never_coerced(self):
         self.assertEqual(phl.loads('"true": 1'), {"true": 1})
 

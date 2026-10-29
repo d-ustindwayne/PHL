@@ -3,9 +3,9 @@
 name: "Dustin Dwayne"           // string
 age: 21                         // number (whole)
 grade: 98.42                    // number (decimal)
-isStudent: true                 // boolean
+isStudent: "true"               // read as a boolean
 mark: "A"                       // there is no character type, so this is a string
-nickname: nil                   // empty
+nickname: "nil"                 // read as null
 "full name": "Dustin Dwayne"    // a quoted key
 
 // Commas between top-level entries are optional

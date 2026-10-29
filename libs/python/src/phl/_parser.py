@@ -3,7 +3,6 @@
 from ._lexer import EOF, NEWLINE, NUMBER, PUNCT, STRING, WORD, tokenize
 from .errors import PHLError
 
-_CONSTANTS = {"true": True, "false": False, "nil": None}
 _COERCE_STRINGS = {"true": True, "false": False, "nil": None, "null": None, "none": None}
 
 
@@ -110,8 +109,6 @@ class _Parser:
             return token.value
         if token.kind == WORD:
             self.next()
-            if token.value in _CONSTANTS:
-                return _CONSTANTS[token.value]
             if token.value.isdigit():
                 return int(token.value)
             raise self.error(

@@ -3,11 +3,6 @@
 import { PHLError } from "./errors.js";
 import { EOF, NEWLINE, NUMBER, STRING, WORD, tokenize } from "./lexer.js";
 
-const CONSTANTS = new Map([
-  ["true", true],
-  ["false", false],
-  ["nil", null],
-]);
 const COERCE_STRINGS = new Map([
   ["true", true],
   ["false", false],
@@ -197,7 +192,6 @@ class Parser {
     }
     if (token.kind === WORD) {
       this.next();
-      if (CONSTANTS.has(token.value)) return this.builder.scalar(token, CONSTANTS.get(token.value));
       if (/^[0-9]+$/.test(token.value)) return this.builder.scalar(token, Number(token.value));
       throw this.error(
         `unexpected word '${token.value}'; strings need double quotes`,

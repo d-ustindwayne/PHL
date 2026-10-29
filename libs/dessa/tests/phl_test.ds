@@ -99,5 +99,8 @@ var[Str] empties = toPhl(parsePhl("o: {}\nl: []"));
 check("empty object and list", empties == "o: {}\nl: []\n");
 check("empty object reads back", parsePhl(empties).get("o").isObject());
 
+check("booleans and nil written as strings", toPhl(parsePhl("a: \"true\"\nb: \"nil\"")) == "a: \"true\"\nb: \"nil\"\n");
+check("bare true is an error", parseFails("a: true", false));
+
 print($"{passed} passed, {failed} failed");
 if (failed > 0) throw "conformance failures";

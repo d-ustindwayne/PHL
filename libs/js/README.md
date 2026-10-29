@@ -1,11 +1,17 @@
 # phl for JavaScript and TypeScript
 
 Reads and writes PHL documents (`.phl`, `.pll`) and HPL tables (`.hpl`,
-`.hpll`). An ES module with TypeScript types. No dependencies. Node 18 or
+`.hpll`). An ES module with TypeScript types. No dependencies. Bun, Node 18 or
 newer, or any modern browser.
 
+```
+bun add phl-file
+```
+
+or `npm install phl-file`.
+
 ```js
-import { parse, stringify, parseTable, stringifyTable } from "@d-ustindwayne/phl";
+import { parse, stringify, parseTable, stringifyTable } from "phl-file";
 
 const doc = parse('name: "Ann"\nproduct: (ID, Name) { 101, "Mouse"; 102, "Chair"; }');
 doc.product[1].Name; // "Chair"
@@ -36,7 +42,7 @@ a position, and `reason` for the message without the position.
 ## Tests
 
 ```
-npm test
+bun test
 ```
 
 The tests run the shared cases in `../../conformance` as well.

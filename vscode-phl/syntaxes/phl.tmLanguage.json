@@ -12,7 +12,6 @@
         { "include": "#list" },
         { "include": "#entry-key" },
         { "include": "#string" },
-        { "include": "#constant" },
         { "include": "#number" },
         { "name": "punctuation.separator.row.phl", "match": ";" },
         { "name": "punctuation.separator.comma.phl", "match": "," },
@@ -93,10 +92,6 @@
         { "name": "constant.character.escape.phl", "match": "\\\\[nt\"\\\\]" },
         { "name": "invalid.illegal.escape.phl", "match": "\\\\." }
       ]
-    },
-    "constant": {
-      "name": "constant.language.phl",
-      "match": "\\b(true|false|nil)\\b"
     },
     "number": {
       "name": "constant.numeric.phl",

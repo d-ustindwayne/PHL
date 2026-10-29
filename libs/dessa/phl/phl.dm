@@ -353,9 +353,6 @@ class _Parser {
         }
         if (token.kind == _Kind.WORD) {
             this.next();
-            if (token.text == "true") return jsonBool(true);
-            if (token.text == "false") return jsonBool(false);
-            if (token.text == "nil") return jsonNull();
             if (_allDigits(token.text)) return jsonNum(Dbl(token.text));
             throw this.error($"unexpected word '{token.text}'; strings need double quotes", token);
         }
@@ -568,8 +565,10 @@ class _Writer {
 
     func[Str] value(value[Json], depth[Int], inline[Bul]=false) {
         switch (value.kind) {
-            case JsonKind.NULL := { return "nil"; }
-            case JsonKind.BOOL := { return value.boolValue ? "true" : "false"; }
+            // PHL has no boolean or null values, so they are written as the
+            // strings that coercion reads back.
+            case JsonKind.NULL := { return "\"nil\""; }
+            case JsonKind.BOOL := { return value.boolValue ? "\"true\"" : "\"false\""; }
             case JsonKind.NUMBER := { return _phlNumber(value.numberValue); }
             case JsonKind.STRING := { return _phlString(value.stringValue); }
             case JsonKind.OBJECT := { return this.object(value, depth, inline); }
