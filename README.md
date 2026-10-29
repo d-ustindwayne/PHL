@@ -123,7 +123,7 @@ When writing, the libraries write booleans and null as `"true"`, `"false"` and
 
 | Language | Package | Source |
 |---|---|---|
-| Python 3.8+ | `phl` | [libs/python](libs/python) |
+| Python 3.8+ | `phl-file` (imported as `phl`) | [libs/python](libs/python) |
 | JavaScript and TypeScript (Node 18+, Bun) | `phl-file` | [libs/js](libs/js) |
 | Dessa | `phl` (riv package) | [libs/dessa](libs/dessa) |
 

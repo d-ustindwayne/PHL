@@ -3,6 +3,12 @@
 Reads and writes PHL documents (`.phl`, `.pll`) and HPL tables (`.hpl`,
 `.hpll`). The interface follows the standard `json` module. No dependencies.
 
+```
+pip install phl-file
+```
+
+The package is named `phl-file` on PyPI and is imported as `phl`.
+
 ```python
 import phl
 
