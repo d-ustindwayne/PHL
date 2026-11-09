@@ -1,0 +1,28 @@
+{
+    "name": "d-ustindwayne/phl-file",
+    "description": "Read and write PHL documents and HPL tables.",
+    "type": "library",
+    "license": "Apache-2.0",
+    "keywords": ["phl", "hpl", "config", "configuration", "table", "parser"],
+    "homepage": "https://github.com/d-ustindwayne/PHL",
+    "support": {
+        "issues": "https://github.com/d-ustindwayne/PHL/issues",
+        "source": "https://github.com/d-ustindwayne/PHL/tree/main/libs/php"
+    },
+    "authors": [
+        {
+            "name": "d-ustindwayne"
+        }
+    ],
+    "require": {
+        "php": ">=8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Phl\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": "php tests/run.php"
+    }
+}
