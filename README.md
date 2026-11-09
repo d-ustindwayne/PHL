@@ -65,6 +65,8 @@ Rules:
   `product[2].Name` is `"LED Desk Lamp"`.
 - `//` starts a comment that runs to the end of the line.
 - Files are UTF-8.
+- Lists, objects and tables can be nested up to 256 levels deep. Numbers must fit
+  in a 64-bit decimal.
 
 The example at the top reads as this JSON:
 
@@ -102,8 +104,13 @@ same table syntax, without a key:
 
 ## Type conversion
 
-Whole numbers are read as integers and decimals as floating point numbers
-(`int` and `float` in Python; JavaScript and Dessa have one number type).
+Whole numbers are read as integers and decimals as floating point numbers.
+JavaScript and Dessa have one number type, which holds whole numbers exactly up
+to 2^53.
+
+Whole numbers beyond 64 bits are an error in C, C++, Java, C# and PHP. Python
+reads them exactly, and JavaScript and Dessa round them. Keep to 64 bits for files
+that several languages read.
 
 The libraries also convert these quoted strings by default, ignoring case:
 
@@ -114,7 +121,8 @@ The libraries also convert these quoted strings by default, ignoring case:
 
 Other strings stay strings, including numbers in quotes such as `"007"`. To
 turn the conversion off, pass `coerce=False` in Python, `{ coerce: false }` in
-JavaScript or `coerce: false` in Dessa.
+JavaScript, `coerce: false` in Dessa and PHP, `false` as the second argument in
+C++ and Java, `coerce: false` in C#, or `PHL_NO_COERCE` in C.
 
 When writing, the libraries write booleans and null as `"true"`, `"false"` and
 `"nil"`.
@@ -125,10 +133,16 @@ When writing, the libraries write booleans and null as `"true"`, `"false"` and
 |---|---|---|
 | Python 3.8+ | `phl-file` (imported as `phl`) | [libs/python](libs/python) |
 | JavaScript and TypeScript (Node 18+, Bun) | `phl-file` | [libs/js](libs/js) |
+| Java 8+, Kotlin, Scala | `io.github.d-ustindwayne:phl-file` | [libs/java](libs/java) |
+| C# (.NET Standard 2.0) | `PhlFile` | [libs/csharp](libs/csharp) |
+| PHP 8.1+ | `d-ustindwayne/phl-file` | [libs/php](libs/php) |
+| C99 | source and CMake | [libs/c](libs/c) |
+| C++17 | single header `phl.hpp` | [libs/cpp](libs/cpp) |
 | Dessa | `phl` (riv package) | [libs/dessa](libs/dessa) |
 
 None of them has dependencies. The Dessa package uses Dessa's own `json`
-package for its `Json` type.
+package for its `Json` type. The Python package uses the C library when it was
+compiled, and pure Python otherwise.
 
 Python:
 
@@ -163,6 +177,46 @@ print(shop.get("product").at(2).get("Name").asStr());   // LED Desk Lamp
 print(toPhl(shop));
 ```
 
+Java:
+
+```java
+Map<String, Object> shop = Phl.parse(text);
+System.out.println(Phl.stringify(shop));
+```
+
+C#:
+
+```csharp
+PhlObject shop = PhlConvert.Parse(text);
+Console.WriteLine(PhlConvert.Stringify(shop));
+```
+
+PHP:
+
+```php
+$shop = Phl::parse($text);
+echo $shop['product'][2]['Name'];   // LED Desk Lamp
+echo Phl::stringify($shop);
+```
+
+C++:
+
+```cpp
+phl::value shop = phl::parse(text);
+std::cout << shop["product"][2]["Name"].as_string();   // LED Desk Lamp
+std::cout << phl::stringify(shop);
+```
+
+C:
+
+```c
+phl_error error;
+phl_value *shop = phl_parse(text, length, PHL_DEFAULT, &error);
+const phl_value *row = phl_at(phl_get(shop, "product"), 2);
+puts(phl_as_string(phl_get(row, "Name"), NULL));   /* LED Desk Lamp */
+phl_free(shop);
+```
+
 When writing, a list of objects that all have the same keys in the same order
 is written as a table. Each library's README lists its full API.
 
@@ -179,8 +233,13 @@ with **Install from VSIX...** in the Extensions view.
 
 | Folder | Contents |
 |---|---|
-| `libs/python` | the Python library |
+| `libs/python` | the Python library, with its optional C extension |
 | `libs/js` | the JavaScript library, with TypeScript types |
+| `libs/java` | the Java library, also for Kotlin and Scala |
+| `libs/csharp` | the C# library |
+| `libs/php` | the PHP library |
+| `libs/c` | the C library, which the Python extension is built on |
+| `libs/cpp` | the C++ library |
 | `libs/dessa` | the Dessa package |
 | `vscode-phl` | the VS Code extension |
 | `conformance` | test files every library must pass |
@@ -196,6 +255,11 @@ language should pass all of them.
 ```
 cd libs/python && PYTHONPATH=src python -m unittest discover -s tests
 cd libs/js && bun test
+cd libs/java && mvn test
+cd libs/csharp && dotnet test Phl.Tests
+cd libs/php && php tests/run.php
+cd libs/c && cmake -S . -B build && cmake --build build && ctest --test-dir build
+cd libs/cpp && cmake -S . -B build && cmake --build build && ctest --test-dir build
 cd vscode-phl && bun run test
 ```
 
@@ -204,7 +268,7 @@ after this one in `DESSA_PACKAGES` (separated by `;` on Windows and `:`
 elsewhere):
 
 ```
-DESSA_PACKAGES="libs/dessa;<Dessa>/tools/riv/packages" dessa run libs/dessa/tests/phl_test.ds
+DESSA_PACKAGES="libs/dessa;<Dessa>/packages" dessa run libs/dessa/tests/phl_test.ds
 ```
 
 ## Status
@@ -214,7 +278,7 @@ The format is new and may still change before version 1.0.
 Planned:
 
 - A final name for the format.
-- Libraries for PHP, Java, C++ and C#.
+- Libraries for Go and Swift are being considered.
 - The Dessa package published through riv.
 
 ## License
