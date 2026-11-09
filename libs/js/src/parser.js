@@ -3,6 +3,8 @@
 import { PHLError } from "./errors.js";
 import { EOF, NEWLINE, NUMBER, STRING, WORD, tokenize } from "./lexer.js";
 
+const MAX_DEPTH = 256;
+
 const COERCE_STRINGS = new Map([
   ["true", true],
   ["false", false],
@@ -79,6 +81,7 @@ class Parser {
   constructor(text, coerce, builder) {
     this.tokens = tokenize(text);
     this.pos = 0;
+    this.depth = 0;
     this.coerce = coerce;
     this.builder = builder;
   }
@@ -109,6 +112,24 @@ class Parser {
       throw this.error(`expected '${char}' ${context}, found ${token.describe()}`, token);
     }
     return token;
+  }
+
+  /** Consumes an opening bracket and counts one more level of nesting. */
+  enter() {
+    const open = this.next();
+    if (this.depth >= MAX_DEPTH) {
+      throw this.error(`nesting is deeper than the limit of ${MAX_DEPTH} levels`, open);
+    }
+    this.depth += 1;
+    return open;
+  }
+
+  /** The value of a number token. Decimals and whole numbers can overflow to infinity. */
+  number(token, value) {
+    if (!Number.isFinite(value)) {
+      throw this.error("this number is too large for a 64-bit decimal", token);
+    }
+    return this.builder.scalar(token, value);
   }
 
   /** True when the next tokens are `key :`, ignoring line breaks after the key. */
@@ -188,11 +209,11 @@ class Parser {
     }
     if (token.kind === NUMBER) {
       this.next();
-      return this.builder.scalar(token, token.value);
+      return this.number(token, token.value);
     }
     if (token.kind === WORD) {
       this.next();
-      if (/^[0-9]+$/.test(token.value)) return this.builder.scalar(token, Number(token.value));
+      if (/^[0-9]+$/.test(token.value)) return this.number(token, Number(token.value));
       throw this.error(
         `unexpected word '${token.value}'; strings need double quotes`,
         token,
@@ -205,35 +226,45 @@ class Parser {
   }
 
   parseObject() {
-    const open = this.next();
+    const open = this.enter();
     const entries = [];
     const seen = new Set();
     while (true) {
       this.skipNewlines();
+      let close = null;
       if (this.peek().isPunct("}")) {
-        return this.builder.object(open, entries, this.next());
+        close = this.next();
+      } else {
+        if (!this.isKeyAhead()) throw this.error("expected 'key: value' inside an object");
+        entries.push(this.parseEntry(seen));
+        close = this.parseItemSeparator("object", "}");
       }
-      if (!this.isKeyAhead()) throw this.error("expected 'key: value' inside an object");
-      entries.push(this.parseEntry(seen));
-      const close = this.parseItemSeparator("object", "}");
-      if (close) return this.builder.object(open, entries, close);
+      if (close) {
+        this.depth -= 1;
+        return this.builder.object(open, entries, close);
+      }
     }
   }
 
   parseList() {
-    const open = this.next();
+    const open = this.enter();
     const items = [];
     while (true) {
       this.skipNewlines();
+      let close = null;
       if (this.peek().isPunct("]")) {
-        return this.builder.list(open, items, this.next());
+        close = this.next();
+      } else {
+        if (this.isKeyAhead()) {
+          throw this.error("a list cannot contain 'key: value' entries; use { } for an object");
+        }
+        items.push(this.parseValue());
+        close = this.parseItemSeparator("list", "]");
       }
-      if (this.isKeyAhead()) {
-        throw this.error("a list cannot contain 'key: value' entries; use { } for an object");
+      if (close) {
+        this.depth -= 1;
+        return this.builder.list(open, items, close);
       }
-      items.push(this.parseValue());
-      const close = this.parseItemSeparator("list", "]");
-      if (close) return this.builder.list(open, items, close);
     }
   }
 
@@ -249,7 +280,7 @@ class Parser {
   // Tables
 
   parseTable() {
-    const open = this.next();
+    const open = this.enter();
     const columns = this.parseColumns();
     this.skipNewlines();
     this.expect("{", "to start the table rows");
@@ -257,6 +288,7 @@ class Parser {
     while (true) {
       this.skipNewlines();
       if (this.peek().isPunct("}")) {
+        this.depth -= 1;
         return this.builder.table(open, columns, rows, this.next());
       }
       const rowToken = this.peek();

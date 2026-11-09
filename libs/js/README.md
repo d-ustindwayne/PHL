@@ -34,10 +34,16 @@ With `coerce` on, the strings `"true"` and `"false"` become booleans, and
 `"nil"`, `"null"` and `"none"` become `null`, ignoring case.
 
 Numbers are JavaScript numbers, so whole numbers beyond
-`Number.MAX_SAFE_INTEGER` lose precision.
+`Number.MAX_SAFE_INTEGER` lose precision, and numbers too large for a double are
+an error. Decimals with a whole value, such as `34.00`, are written as `34`.
+
+JavaScript objects always put keys that look like whole numbers first, so `{b: 1,
+"2": 2}` is written with `2` before `b`.
 
 Errors throw `PHLError` with `line` and `column` properties when the error has
-a position, and `reason` for the message without the position.
+a position, and `reason` for the message without the position. Columns count
+UTF-16 units, so a character such as an emoji counts as two. Nesting deeper than
+256 levels is an error when reading and writing.
 
 ## Tests
 

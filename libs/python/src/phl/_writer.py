@@ -5,6 +5,7 @@ import re
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ._parser import _TOO_DEEP, MAX_DEPTH
 from .errors import PHLError
 
 _BARE_KEY = re.compile(r"[A-Za-z0-9_]+\Z")
@@ -52,6 +53,7 @@ def _is_scalar(value):
 class _Writer:
     def __init__(self, indent):
         self.indent = " " * indent if indent else ""
+        self.nesting = 0
 
     def value(self, value, depth, inline=False):
         # PHL has no boolean or null values, so they are written as the strings
@@ -64,14 +66,25 @@ class _Writer:
             return _number(value)
         if isinstance(value, str):
             return _string(value)
+        if not isinstance(value, (Mapping, list, tuple)):
+            raise PHLError(f"cannot write a value of type {type(value).__name__}")
+
+        # The limit also stops values that contain themselves. The methods below
+        # use loops, as comprehensions need a stack frame of their own on older
+        # Pythons, and the recursion limit must not be reached before this limit.
+        if self.nesting >= MAX_DEPTH:
+            raise PHLError(_TOO_DEEP)
+        self.nesting += 1
         if isinstance(value, Mapping):
-            return self.object(value, depth, inline)
-        if isinstance(value, (list, tuple)):
+            result = self.object(value, depth, inline)
+        else:
             value = list(value)
             if _is_table(value):
-                return self.table(value, depth, inline)
-            return self.list(value, depth, inline)
-        raise PHLError(f"cannot write a value of type {type(value).__name__}")
+                result = self.table(value, depth, inline)
+            else:
+                result = self.list(value, depth, inline)
+        self.nesting -= 1
+        return result
 
     def block(self, items, depth, inline, opener, closer):
         if inline or not self.indent:
@@ -83,22 +96,31 @@ class _Writer:
     def object(self, value, depth, inline):
         if not value:
             return "{}"
-        items = [f"{_key(k)}: {self.value(v, depth + 1, inline)}" for k, v in value.items()]
+        items = []
+        for k, v in value.items():
+            items.append(f"{_key(k)}: {self.value(v, depth + 1, inline)}")
         return self.block(items, depth, inline, "{", "}")
 
     def list(self, value, depth, inline):
         if not value:
             return "[]"
         inline = inline or all(_is_scalar(item) for item in value)
-        items = [self.value(item, depth + 1, inline) for item in value]
+        items = []
+        for item in value:
+            items.append(self.value(item, depth + 1, inline))
         return self.block(items, depth, inline, "[", "]")
 
     def row(self, row):
-        return ", ".join(self.value(cell, 0, inline=True) for cell in row.values()) + ";"
+        cells = []
+        for cell in row.values():
+            cells.append(self.value(cell, 0, True))
+        return ", ".join(cells) + ";"
 
     def table(self, rows, depth, inline):
         header = "(" + ", ".join(_key(k) for k in rows[0].keys()) + ")"
-        lines = [self.row(row) for row in rows]
+        lines = []
+        for row in rows:
+            lines.append(self.row(row))
         if inline or not self.indent:
             return header + " { " + " ".join(lines) + " }"
         pad = self.indent * (depth + 1)
@@ -115,7 +137,12 @@ def dumps(obj, *, indent=4):
     if not isinstance(obj, Mapping):
         raise PHLError("a PHL document must be a dict of top-level entries")
     writer = _Writer(indent)
-    lines = [f"{_key(k)}: {writer.value(v, 0)}" for k, v in obj.items()]
+    lines = []
+    try:
+        for k, v in obj.items():
+            lines.append(f"{_key(k)}: {writer.value(v, 0)}")
+    except RecursionError:
+        raise PHLError(_TOO_DEEP) from None
     return "\n".join(lines) + "\n" if lines else ""
 
 
@@ -126,4 +153,9 @@ def dumps_table(rows, *, indent=4):
         raise PHLError(
             "an HPL table must be a non-empty list of dicts that share the same keys"
         )
-    return _Writer(indent).table(rows, 0, False) + "\n"
+    writer = _Writer(indent)
+    writer.nesting = 1
+    try:
+        return writer.table(rows, 0, False) + "\n"
+    except RecursionError:
+        raise PHLError(_TOO_DEEP) from None

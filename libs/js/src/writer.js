@@ -2,6 +2,7 @@
 
 import { PHLError } from "./errors.js";
 
+const MAX_DEPTH = 256;
 const BARE_KEY = /^[A-Za-z0-9_]+$/;
 const ESCAPES = { "\\": "\\\\", '"': '\\"', "\n": "\\n", "\t": "\\t" };
 
@@ -63,7 +64,19 @@ const isScalar = (value) => value === null || typeof value !== "object";
 
 class Writer {
   constructor(indent) {
-    this.indent = indent ? " ".repeat(indent) : "";
+    this.indent = indent > 0 ? " ".repeat(indent) : "";
+    this.nesting = 0;
+  }
+
+  /** Counts one more level of nesting, which also stops values that contain themselves. */
+  nested(write) {
+    if (this.nesting >= MAX_DEPTH) {
+      throw new PHLError(`nesting is deeper than the limit of ${MAX_DEPTH} levels`);
+    }
+    this.nesting += 1;
+    const result = write();
+    this.nesting -= 1;
+    return result;
   }
 
   value(value, depth, inline = false) {
@@ -79,9 +92,11 @@ class Writer {
         return writeString(value);
     }
     if (Array.isArray(value)) {
-      return isTable(value) ? this.table(value, depth, inline) : this.list(value, depth, inline);
+      return this.nested(() =>
+        isTable(value) ? this.table(value, depth, inline) : this.list(value, depth, inline),
+      );
     }
-    if (isPlainObject(value)) return this.object(value, depth, inline);
+    if (isPlainObject(value)) return this.nested(() => this.object(value, depth, inline));
     const type = value?.constructor?.name ?? typeof value;
     throw new PHLError(`cannot write a value of type ${type}`);
   }
@@ -140,5 +155,7 @@ export function stringifyTable(rows, { indent = 4 } = {}) {
   if (!Array.isArray(rows) || !isTable(rows)) {
     throw new PHLError("an HPL table must be a non-empty array of objects that share the same keys");
   }
-  return `${new Writer(indent).table(rows, 0, false)}\n`;
+  const writer = new Writer(indent);
+  writer.nesting = 1;
+  return `${writer.table(rows, 0, false)}\n`;
 }

@@ -1,7 +1,12 @@
 """Builds Python values from PHL and HPL tokens."""
 
+import math
+
 from ._lexer import EOF, NEWLINE, NUMBER, PUNCT, STRING, WORD, tokenize
 from .errors import PHLError
+
+MAX_DEPTH = 256
+_TOO_DEEP = f"nesting is deeper than the limit of {MAX_DEPTH} levels"
 
 _COERCE_STRINGS = {"true": True, "false": False, "nil": None, "null": None, "none": None}
 
@@ -10,6 +15,7 @@ class _Parser:
     def __init__(self, text, coerce):
         self.tokens = tokenize(text)
         self.pos = 0
+        self.depth = 0
         self.coerce = coerce
 
     # Token helpers
@@ -36,6 +42,12 @@ class _Parser:
         if not token.is_punct(char):
             raise self.error(f"expected '{char}' {context}, found {token.describe()}", token)
         return token
+
+    def enter(self):
+        token = self.next()
+        if self.depth >= MAX_DEPTH:
+            raise self.error(_TOO_DEEP, token)
+        self.depth += 1
 
     def is_key_ahead(self):
         """True when the next tokens are `key :`, ignoring line breaks after the key."""
@@ -106,11 +118,11 @@ class _Parser:
             return token.value
         if token.kind == NUMBER:
             self.next()
-            return token.value
+            return self.number(token)
         if token.kind == WORD:
             self.next()
             if token.value.isdigit():
-                return int(token.value)
+                return self.number(token)
             raise self.error(
                 f"unexpected word {token.value!r}; strings need double quotes", token
             )
@@ -124,33 +136,49 @@ class _Parser:
             raise self.error("expected a value, found end of input", token)
         raise self.error(f"expected a value, found {token.describe()}", token)
 
+    def number(self, token):
+        if "." in token.value:
+            value = float(token.value)
+            if not math.isfinite(value):
+                raise self.error("this number is too large for a 64-bit decimal", token)
+            return value
+        try:
+            return int(token.value)
+        except ValueError:
+            # More digits than Python allows; see sys.set_int_max_str_digits.
+            raise self.error("this number has too many digits", token) from None
+
     def parse_object(self):
-        self.next()
+        self.enter()
         result = {}
         while True:
             self.skip_newlines()
             if self.peek().is_punct("}"):
                 self.next()
-                return result
+                break
             if not self.is_key_ahead():
                 raise self.error("expected 'key: value' inside an object")
             self.parse_entry(result)
             if not self.parse_item_separator("object", "}"):
-                return result
+                break
+        self.depth -= 1
+        return result
 
     def parse_list(self):
-        self.next()
+        self.enter()
         result = []
         while True:
             self.skip_newlines()
             if self.peek().is_punct("]"):
                 self.next()
-                return result
+                break
             if self.is_key_ahead():
                 raise self.error("a list cannot contain 'key: value' entries; use { } for an object")
             result.append(self.parse_value())
             if not self.parse_item_separator("list", "]"):
-                return result
+                break
+        self.depth -= 1
+        return result
 
     def parse_item_separator(self, kind, closer):
         """Consumes ',' (returns True) or the closing bracket (returns False)."""
@@ -167,11 +195,13 @@ class _Parser:
     # Tables
 
     def parse_table(self):
-        self.next()
+        self.enter()
         columns = self.parse_columns(")")
         self.skip_newlines()
         self.expect("{", "to start the table rows")
-        return self.parse_rows(columns, "}")
+        rows = self.parse_rows(columns, "}")
+        self.depth -= 1
+        return rows
 
     def parse_columns(self, closer):
         columns = []
@@ -232,9 +262,15 @@ def loads(text, *, coerce=True):
     With coerce=True (the default), quoted strings "true" and "false" become
     booleans and "nil", "null" and "none" become None, ignoring case.
     """
-    return _Parser(text, coerce).parse_document()
+    try:
+        return _Parser(text, coerce).parse_document()
+    except RecursionError:
+        raise PHLError(_TOO_DEEP) from None
 
 
 def loads_table(text, *, coerce=True):
     """Parse an HPL table document into a list of dicts."""
-    return _Parser(text, coerce).parse_table_document()
+    try:
+        return _Parser(text, coerce).parse_table_document()
+    except RecursionError:
+        raise PHLError(_TOO_DEEP) from None

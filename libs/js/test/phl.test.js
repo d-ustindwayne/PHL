@@ -163,3 +163,42 @@ test("parseTree gives types and positions", () => {
   assert.equal(table.value.rows[0][0].value, 1);
   assert.equal(parseTree("(A) { 1; }", { table: true }).type, "table");
 });
+
+const nested = (levels, open, close) => `a: ${open.repeat(levels)}${close.repeat(levels)}`;
+
+test("the deepest allowed nesting can be read and written", () => {
+  const data = parse(nested(256, "[", "]"));
+  assert.deepEqual(parse(stringify(data)), data);
+});
+
+test("deeper nesting is an error", () => {
+  for (const text of [
+    nested(257, "[", "]"),
+    nested(5000, "[", "]"),
+    `a: ${"[".repeat(200000)}`,
+    `a: ${"(a) { ".repeat(257)}1${"; }".repeat(257)}`,
+  ]) {
+    assert.throws(() => parse(text), PHLError);
+    assert.throws(() => parseTree(text), PHLError);
+  }
+});
+
+test("values nested too deeply, or containing themselves, cannot be written", () => {
+  let value = 1;
+  for (let i = 0; i <= 256; i += 1) value = [value];
+  assert.throws(() => stringify({ a: value }), PHLError);
+
+  const cycle = [];
+  cycle.push(cycle);
+  assert.throws(() => stringify({ a: cycle }), PHLError);
+});
+
+test("numbers too large for a double are an error", () => {
+  for (const text of [`a: ${"9".repeat(400)}.0`, `a: ${"9".repeat(400)}`, `a: -${"9".repeat(400)}`]) {
+    assert.throws(
+      () => parse(text),
+      (error) => error instanceof PHLError && error.column === 4,
+    );
+  }
+  assert.equal(parse(`a: 0.${"0".repeat(400)}1`).a, 0);
+});

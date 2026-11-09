@@ -1,6 +1,6 @@
 // Runs the shared conformance cases and a few checks of the Dessa library.
 // From the repository root:
-//     DESSA_PACKAGES="libs/dessa;<Dessa>/tools/riv/packages" dessa run libs/dessa/tests/phl_test.ds
+//     DESSA_PACKAGES="libs/dessa;<Dessa>/packages" dessa run libs/dessa/tests/phl_test.ds
 
 $("phl") { parsePhl, parsePhlTable, toPhl, toPhlTable, PhlError }
 $("json") { Json, parseJson, jsonObject, jsonNum, jsonStr }
@@ -101,6 +101,14 @@ check("empty object reads back", parsePhl(empties).get("o").isObject());
 
 check("booleans and nil written as strings", toPhl(parsePhl("a: \"true\"\nb: \"nil\"")) == "a: \"true\"\nb: \"nil\"\n");
 check("bare true is an error", parseFails("a: true", false));
+
+// ---- Limits ----
+check("nesting too deep", parseFails($"a: {"[".repeat(257)}{"]".repeat(257)}", false));
+check("nesting far too deep", parseFails($"a: {"[".repeat(5000)}", false));
+check("deepest nesting is written", !toPhl(parsePhl($"a: {"[".repeat(256)}{"]".repeat(256)}")).isEmpty());
+check("number too large", parseFails($"a: {"9".repeat(400)}.0", false));
+check("whole number too large", parseFails($"a: {"9".repeat(400)}", false));
+check("number too small is zero", parsePhl($"a: 0.{"0".repeat(400)}1").get("a").asDbl() == 0.0);
 
 print($"{passed} passed, {failed} failed");
 if (failed > 0) throw "conformance failures";

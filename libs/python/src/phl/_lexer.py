@@ -136,9 +136,9 @@ def _read_number_or_word(text, i, line, column):
             i += 1
         if i < length and _is_word_char(text[i]):
             raise PHLError(f"invalid number {text[start:i + 1]!r}", line, column)
-        return Token(NUMBER, float(text[start:i]), line, column), i
+        return Token(NUMBER, text[start:i], line, column), i
 
     if negative:
-        return Token(NUMBER, int(head), line, column), i
+        return Token(NUMBER, head, line, column), i
     # A plain run of digits can be a key or a number; the parser decides.
     return Token(WORD, head, line, column), i

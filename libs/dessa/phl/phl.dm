@@ -22,6 +22,9 @@
 
 $("json") { Json, JsonKind, jsonNull, jsonBool, jsonNum, jsonStr, jsonArray, jsonObject }
 
+// Lists, objects and tables nested deeper than this are an error.
+const[Int] _MAX_DEPTH = 256;
+
 // Thrown for text that is not valid PHL or HPL, and for values that cannot be
 // written. line and column are 0 when the error has no position.
 class PhlError(Error) {
@@ -241,6 +244,7 @@ class _Lexer {
 class _Parser {
     var[_Token<>] tokens = <>;
     var[Int] pos = 0;
+    var[Int] depth = 0;
     var[Bul] coerce = true;
 
     init(text[Str], coerce[Bul]) {
@@ -275,6 +279,24 @@ class _Parser {
         if (!token.isPunct(c)) {
             throw this.error($"expected '{c}' {context}, found {token.describe()}", token);
         }
+    }
+
+    // Reads an opening bracket and counts one more level of nesting.
+    func[Emp] enter() {
+        var[_Token] open = this.next();
+        if (this.depth >= _MAX_DEPTH) {
+            throw this.error($"nesting is deeper than the limit of {_MAX_DEPTH} levels", open);
+        }
+        this.depth++;
+    }
+
+    // A number, which can overflow to infinity when it is very long.
+    func[Json] number(value[Dbl], token[_Token]) {
+        var[Str] text = Str(value);
+        if (text == "inf" || text == "-inf" || text == "Infinity" || text == "-Infinity") {
+            throw this.error("this number is too large for a 64-bit decimal", token);
+        }
+        return jsonNum(value);
     }
 
     // True when the next tokens are `key :`, ignoring line breaks after the key.
@@ -349,11 +371,11 @@ class _Parser {
         }
         if (token.kind == _Kind.NUMBER) {
             this.next();
-            return jsonNum(token.number);
+            return this.number(token.number, token);
         }
         if (token.kind == _Kind.WORD) {
             this.next();
-            if (_allDigits(token.text)) return jsonNum(Dbl(token.text));
+            if (_allDigits(token.text)) return this.number(Dbl(token.text), token);
             throw this.error($"unexpected word '{token.text}'; strings need double quotes", token);
         }
         if (token.isPunct("{")) return this.object();
@@ -363,35 +385,39 @@ class _Parser {
     }
 
     func[Json] object() {
-        this.next();
+        this.enter();
         var[Json] result = jsonObject();
         loop {
             this.skipNewlines();
             if (this.peek().isPunct("}")) {
                 this.next();
-                return result;
+                break;
             }
             if (!this.isKeyAhead()) throw this.error("expected 'key: value' inside an object", this.peek());
             this.entry(result);
-            if (!this.itemSeparator("object", "}")) return result;
+            if (!this.itemSeparator("object", "}")) break;
         }
+        this.depth--;
+        return result;
     }
 
     func[Json] list() {
-        this.next();
+        this.enter();
         var[Json] result = jsonArray();
         loop {
             this.skipNewlines();
             if (this.peek().isPunct("]")) {
                 this.next();
-                return result;
+                break;
             }
             if (this.isKeyAhead()) {
                 throw this.error("a list cannot contain 'key: value' entries; use { } for an object", this.peek());
             }
             result.push(this.value());
-            if (!this.itemSeparator("list", "]")) return result;
+            if (!this.itemSeparator("list", "]")) break;
         }
+        this.depth--;
+        return result;
     }
 
     // Reads ',' (gives true) or the closing bracket (gives false).
@@ -407,11 +433,13 @@ class _Parser {
 
     // (col, col) { value, value; value, value; }
     func[Json] table() {
-        this.next();
+        this.enter();
         var[Str<>] columns = this.columns(")");
         this.skipNewlines();
         this.expect("{", "to start the table rows");
-        return this.rows(columns, "}");
+        var[Json] rows = this.rows(columns, "}");
+        this.depth--;
+        return rows;
     }
 
     func[Str<>] columns(closer[Str]) {
@@ -558,9 +586,18 @@ func[Bul] _isScalar(value[Json]) {
 
 class _Writer {
     var[Str] indent = "";
+    var[Int] nesting = 0;
 
     init(indent[Int]) {
         this.indent = " ".repeat(indent);
+    }
+
+    // Counts one more level of nesting.
+    func[Emp] enter() {
+        if (this.nesting >= _MAX_DEPTH) {
+            throw new PhlError($"nesting is deeper than the limit of {_MAX_DEPTH} levels");
+        }
+        this.nesting++;
     }
 
     func[Str] value(value[Json], depth[Int], inline[Bul]=false) {
@@ -571,11 +608,19 @@ class _Writer {
             case JsonKind.BOOL := { return value.boolValue ? "\"true\"" : "\"false\""; }
             case JsonKind.NUMBER := { return _phlNumber(value.numberValue); }
             case JsonKind.STRING := { return _phlString(value.stringValue); }
-            case JsonKind.OBJECT := { return this.object(value, depth, inline); }
             default := {}
         }
-        if (_isTable(value)) return this.table(value, depth, inline);
-        return this.list(value, depth, inline);
+        this.enter();
+        var[Str] out = "";
+        if (value.isObject()) {
+            out = this.object(value, depth, inline);
+        } else if (_isTable(value)) {
+            out = this.table(value, depth, inline);
+        } else {
+            out = this.list(value, depth, inline);
+        }
+        this.nesting--;
+        return out;
     }
 
     func[Str] block(items[Str<>], depth[Int], inline[Bul], open[Str], close[Str]) {
@@ -651,5 +696,7 @@ func[Str] toPhlTable(rows[Json], indent[Int]=4) {
     if (!_isTable(rows)) {
         throw new PhlError("an HPL table must be a non-empty array of objects that share the same keys");
     }
-    return new _Writer(indent).table(rows, 0, false) + "\n";
+    var[_Writer] writer = new _Writer(indent);
+    writer.nesting = 1;
+    return writer.table(rows, 0, false) + "\n";
 }
