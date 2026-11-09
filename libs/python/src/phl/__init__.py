@@ -1,8 +1,24 @@
 """Read and write PHL documents (.phl, .pll) and HPL tables (.hpl, .hpll)."""
 
-from ._parser import loads, loads_table
-from ._writer import dumps, dumps_table
+import os as _os
+
 from .errors import PHLError
+
+# The C version is used when it was compiled. The pure Python version behaves
+# the same way; set PHL_PURE_PYTHON=1 to force it.
+if _os.environ.get("PHL_PURE_PYTHON"):
+    _speedups = None
+else:
+    try:
+        from . import _speedups
+    except ImportError:
+        _speedups = None
+
+if _speedups is not None:
+    from ._speedups import dumps, dumps_table, loads, loads_table
+else:
+    from ._parser import loads, loads_table
+    from ._writer import dumps, dumps_table
 
 __all__ = [
     "PHLError",

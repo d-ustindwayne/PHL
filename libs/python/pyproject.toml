@@ -15,7 +15,10 @@ keywords = ["phl", "hpl", "config", "configuration", "table", "data format", "pa
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
+    "Programming Language :: C",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: File Formats",
     "Topic :: Software Development :: Libraries",
 ]
@@ -27,3 +30,6 @@ Issues = "https://github.com/d-ustindwayne/PHL/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.exclude-package-data]
+phl = ["*.c"]

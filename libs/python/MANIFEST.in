@@ -1,0 +1,3 @@
+include setup.py
+include src/phl/_speedups.c
+recursive-include native *.c *.h
