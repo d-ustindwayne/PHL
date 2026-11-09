@@ -7,3 +7,16 @@ node_modules/
 *.vsix
 riv_modules/
 vscode-phl/src/phl/
+libs/python/native/
+*.pyd
+*.so
+*.o
+*.obj
+*.class
+target/
+bin/
+obj/
+vendor/
+composer.lock
+.phpunit.result.cache
+TestResults/
